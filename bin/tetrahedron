@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+# TODO(mtwilliams): Command line tool.
+exit 1
