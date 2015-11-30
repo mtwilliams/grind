@@ -3,6 +3,11 @@ PATH
   specs:
     tetrahedron (0.0.1.0)
       activesupport
+      erubis
+      mail
+      rack
+      rack-contrib
+      redis
       sequel
       sinatra
       sinatra-contrib
@@ -19,9 +24,14 @@ GEM
       tzinfo (~> 1.1)
     backports (3.6.7)
     coderay (1.1.0)
+    erubis (2.7.0)
+    git-version-bump (0.15.1)
     i18n (0.7.0)
     json (1.8.3)
+    mail (2.6.3)
+      mime-types (>= 1.16, < 3)
     method_source (0.8.2)
+    mime-types (2.99)
     minitest (5.8.3)
     multi_json (1.11.2)
     pry (0.10.3)
@@ -29,11 +39,15 @@ GEM
       method_source (~> 0.8.1)
       slop (~> 3.4)
     rack (1.6.4)
+    rack-contrib (1.4.0)
+      git-version-bump (~> 0.15)
+      rack (~> 1.4)
     rack-protection (1.5.3)
       rack
     rack-test (0.6.3)
       rack (>= 1.0)
     rake (10.4.2)
+    redis (3.2.2)
     sequel (4.28.0)
     sinatra (1.4.6)
       rack (~> 1.4)
