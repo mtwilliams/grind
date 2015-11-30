@@ -32,7 +32,7 @@ module Tetrahedron
 
     # A short summary of this Gem.
     def self.summary
-      "Opinionated Sinatra."
+      "Welcome to the Tet."
     end
 
     # A full description of this Gem.
@@ -41,7 +41,7 @@ module Tetrahedron
     end
 
     module VERSION #:nodoc:
-      MAJOR, MINOR, PATCH, PRE = [0, 0, 0, 1]
+      MAJOR, MINOR, PATCH, PRE = [0, 0, 1, 0]
       STRING = [MAJOR, MINOR, PATCH, PRE].compact.join('.')
     end
 

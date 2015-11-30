@@ -1,28 +1,37 @@
 module Tetrahedron
-  module Sessions
+  class Sessions
     class Configuration
-      Options = %i{cookie domain lifetime secret}
-      attr_reader *Options
-
-      def initialize(configuration={})
-        Options.each do |opt|
-          self.instance_variable_set(:"@#{opt}", configuration[opt])
+      OPTIONS = [:key, :domain, :path, :expires, :secret]
+      attr_accessor *OPTIONS
+      def dsl(&block)
+        config = self
+        dsl = Class.new
+        OPTIONS.each do |option|
+          dsl.send :define_method, option.to_sym do |value|
+            config.instance_variable_set(:"@#{option}", value)
+          end
         end
+        dsl.new.instance_eval(&block)
       end
     end
 
-    def self.config
-      @configuration
+    def self.configure(&configurator)
+      application = self.class_variable_get(:@@application)
+      configuration = Configuration.new
+      configuration.key = (application.to_s.underscore.split('::')+['session']).join('.')
+      configuration.dsl(&configurator)
+      middleware = application.const_get('Middleware')
+      middleware.use(Rack::Session::Cookie, :key => configuration.key,
+                                            :domain => configuration.domain,
+                                            :path => configuration.path,
+                                            :expire_after => configuration.expires,
+                                            :secret => configuration.secret)
     end
 
-    def self.configured?
-      !@configuration.nil?
-    end
-
-    def self.configure(configuration)
-      # TODO(mtwilliams): Validate |configuration|.
-      configuration[:cookie] ||= "#{Tetrahedron.config.app.to_s.downcase.gsub(/::/,'.')}.session"
-      @configuration = Sessions::Configuration.new(configuration)
+    def self.install(application)
+      sessions = Class.new(self)
+      application.const_set('Sessions', sessions)
+      sessions.class_variable_set(:@@application, application)
     end
   end
 end

@@ -1,113 +1,89 @@
+require 'sequel'
+
+# Everyone needs these.
+Sequel.extension :migration
+Sequel::Model.plugin :timestamps
+
+# The Tet needs this for the magic performed in `Model.db=`.
+Sequel::Model.plugin :subclasses
+
 module Tetrahedron
-  module Database
-    class Configuration
-      Options = %i{adapter user password host port database pool}
-      attr_reader *Options
-
-      def initialize(configuration={})
-        Options.each do |opt|
-          self.instance_variable_set(:"@#{opt}", configuration[opt])
-        end
-      end
-
-      def override(overrides={})
-        configuration = self.dup
-        Options.each do |opt|
-          configuration.instance_variable_set(:"@#{opt}", overrides[opt]) if overrides.include? opt
-        end
-        configuration
-      end
+  class Database < Service
+    class Configuration < Service::Configuration
     end
 
-    def self.configured?
-      !@configuration.nil?
+    class Provider < Service::Provider
+      def connection; end
+      def connect; raise NotImplementedError; end
+      def disconnect; raise NotImplementedError; end
     end
 
-    def self.configure(configuration)
-      # TODO(mtwilliams): Validate |configuration|.
-      configuration[:database] ||= Terahedron.config.app.to_s.underscore.gsub(/::/,'_')
-      configuration[:pool] ||= 1
-      @configuration = Configuration.new(configuration)
-    end
-
-    # TODO(mtwilliams): Refactor into Terahedron::Service.wait_until_reachable
-    def self.wait_until_reachable(overrides={})
-      # By default, we wait up to 15 seconds.
-      overrides[:timeout] ||= 15
-
-      configuration   = @configuration.override(overrides) if configured?
-      configuration ||= Configuration.new(overrides)
-
-      # TODO(mtwilliams): Don't assume TCP.
-       # Look at |configuration.adapter|.
-      Timeout::timeout(overrides[:timeout]) do
-        while true
-          begin
-            TCPSocket.new(configuration.host, configuration.port).close
-            return true
-          rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError
-            # We're all good citizens, right?
-            Kernel.sleep(1)
-          end
-        end
-      end
-    rescue Timeout::Error
-      false
-    end
-
-    def self.wait_until_reachable!(overrides={})
-      # TODO(mtwilliams): Raise a custom exception type.
-      raise "Database is unreachable!" unless wait_until_reachable
-    end
-
-    def self.connect(overrides={})
-      # Wait some amount of time before assuming the database is down.
-      Tetrahedron::Database.wait_until_reachable!(overrides)
-
-      configuration   = @configuration.override(overrides) if configured?
-      configuration ||= Configuration.new(overrides)
-
-      @connection = Sequel.connect(:adapter => configuration.adapter,
-                                   :user => configuration.user,
-                                   :password => configuration.password,
-                                   :host => configuration.host,
-                                   :port => configuration.port,
-                                   :database => configuration.database,
-                                   :test => true,
-                                   :sslmode => :prefer,
-                                   :max_connections => configuration.pool)
-
-      # Reback our models with the new connection pool.
-      Tetrahedron::Model.db = @connection
-
-      true
-    end
-
-    def self.disconnect
-      connection = @connection
-
-      # TODO(mtwilliams): Ensure this is thread safe.
-      # Make sure no one tries to use the disconnected connection pool.
-      Tetrahedron::Model.db = Sequel.mock
-      @connection = nil
-
-      connection.disconnect unless connection.nil?
+    def self.connected?
+      !self.connection.nil?
     end
 
     def self.connection
-      @connection
+      configured!
+      self.class_variable_get(:@@provider).connection
     end
 
-    def self.reset
-      # TODO(mtwilliams): Drop and recreate database.
+    def self.connect
+      configured!
+      connected = self.class_variable_get(:@@provider).connect
+      # Back our models with the new connection.
+      model = self.class_variable_get(:@@application).const_get("Model")
+      model.db = self.connection if connected
+      connected
     end
 
-    def self.migrate
-      Sequel::IntegerMigrator.run(connection, File.join(Tetrahedron.config.root, 'db', 'migrations'))
+    def self.disconnect
+      configured!
+      # TODO(mtwilliams): Verify that this is thread-safe.
+      model = self.class_variable_get(:@@application).const_get("Model")
+      model.db = Sequel.mock
+      self.class_variable_get(:@@provider).disconnect
     end
 
-    def self.seed
-      Kernel.load(File.join(Tetrahedron.config.root, 'db', 'seed.rb'))
+    def self.install(application)
+      super(application)
+
+      # TODO(mtwilliams): Refactor out this horrid mess.
+
+      # We can't build an inheritence heirarchy.
+      # See https://groups.google.com/d/msg/sequel-talk/OG5ti9JAJIE/p1iqO57cwqwJ.
+      application.class_eval("Model = Class.new(Sequel::Model);")
+      model = application.const_get("Model")
+
+      # Stop Sequel from bitching when we users subclass models before the
+      # database connection is established.
+      model.db = Sequel.mock
+
+      # Back descendents.
+      model.send :define_singleton_method, :db= do |db|
+        super(db)
+        # All the way down, boys.
+        self.descendents.each do |descendent|
+          descendent.db = db
+        end
+      end
+
+      # Custom names are cool, m'kay.
+      application.send :define_singleton_method, :Model do |source|
+        anonymous_model_class = model::ANONYMOUS_MODEL_CLASSES_MUTEX.synchronize do
+                                  model::ANONYMOUS_MODEL_CLASSES[source]
+                                end
+        unless anonymous_model_class
+          anonymous_model_class = if source.is_a?(Sequel::Database)
+                                    Class.new(model).db = source
+                                  else
+                                    Class.new(model).set_dataset(source)
+                                  end
+          model::ANONYMOUS_MODEL_CLASSES_MUTEX.synchronize do
+            model::ANONYMOUS_MODEL_CLASSES[source] = anonymous_model_class
+          end
+        end
+        anonymous_model_class
+      end
     end
   end
 end

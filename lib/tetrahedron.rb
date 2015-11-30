@@ -1,59 +1,31 @@
-require 'rubygems'
-require 'bundler'
-
-Bundler.require(:default)
-
-# Some things aren't nicely cut gems, unforunately.
-require 'base64'
-require 'erb'
-require 'net/http'
-require 'ostruct'
-require 'securerandom'
-require 'socket'
-require 'time'
-require 'uri'
-require 'yaml'
-
-# Smells like Rails...
 require 'active_support'
 require 'active_support/core_ext'
 
 module Tetrahedron
-  def self.root
-    @root ||= File.expand_path(File.join(File.dirname(__FILE__), '..'))
-  end
+  require 'tetrahedron/gem'
+  require 'tetrahedron/error'
+
+  require 'tetrahedron/middleware'
+  require 'tetrahedron/sessions'
+
+  require 'tetrahedron/base'
+    require 'tetrahedron/application'
+      require 'tetrahedron/application/base'
+        require 'tetrahedron/application/controller'
+        require 'tetrahedron/application/endpoint'
+
+  require 'tetrahedron/service'
+    require 'tetrahedron/database'
+      require 'tetrahedron/databases/sqlite3'
+      require 'tetrahedron/databases/postgres'
+
+  # require 'tetrahedron/cache'
+  #   require 'tetrahedron/caches/null'     #=> ActiveSupport::Cache::NullStore
+  #   require 'tetrahedron/caches/memory'   #=> ActiveSupport::Cache::MemoryStore
+  #   require 'tetrahedron/caches/memcache' #=> Dalli
+  #   require 'tetrahedron/caches/redis'    #=> Hiredis
+  # require 'tetrahedron/queue'
+  #   require 'tetrahedron/queues/null'     #=> .*~~~ The Abyss ~~~*.
+  #   require 'tetrahedron/queues/spawn'    #=> Thread.new
+  #   require 'tetrahedron/queues/sidekiq'  #=> Sidekiq (from Redis, with Love)
 end
-
-require 'tetrahedron/gem'
-require 'tetrahedron/bundler'
-
-require 'tetrahedron/error'
-require 'tetrahedron/errors'
-
-require 'tetrahedron/configuration'
-require 'tetrahedron/environment'
-require 'tetrahedron/bootfile'
-
-Tetrahedron::Bundler.require
-
-require 'sinatra/base'
-require 'sinatra/contrib'
-
-require 'sequel'
-
-Sequel.extension :migration
-
-Sequel::Model.plugin :timestamps
-Sequel::Model.plugin :subclasses
-
-require 'tetrahedron/base'
-
-require 'tetrahedron/assets'
-
-require 'tetrahedron/database'
-require 'tetrahedron/sessions'
-
-require 'tetrahedron/app'
-require 'tetrahedron/model'
-require 'tetrahedron/controller'
-require 'tetrahedron/endpoint'

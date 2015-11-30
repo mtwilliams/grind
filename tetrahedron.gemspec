@@ -23,12 +23,17 @@ Gem::Specification.new do |s|
   s.add_development_dependency("rake")
   s.add_development_dependency("pry")
 
+  s.add_dependency("thor")
+
   s.add_dependency("activesupport")
 
+  s.add_dependency("rack")
+  s.add_dependency("rack-contrib")
   s.add_dependency("sinatra")
   s.add_dependency("sinatra-contrib")
+  s.add_dependency("erubis")
 
   s.add_dependency("sequel")
-
-  s.add_dependency("thor")
+  s.add_dependency("redis")
+  s.add_dependency("mail")
 end
