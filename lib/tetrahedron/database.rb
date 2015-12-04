@@ -45,6 +45,10 @@ module Tetrahedron
       self.class_variable_get(:@@provider).disconnect
     end
 
+    def self.migrate(migrations)
+      Sequel::IntegerMigrator.run(self.connection, migrations)
+    end
+
     def self.install(application)
       super(application)
 
