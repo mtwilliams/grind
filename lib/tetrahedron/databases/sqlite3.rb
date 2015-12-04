@@ -5,9 +5,10 @@ module Tetrahedron
         attr_accessor :path
       end
 
-      def initialize
+      def initialize(&configurator)
         @configuration = Configuration.new
-        yield @configuration if block_given?
+        # TODO(mtwilliams): Invoke such that users don't have to prepend |self|.
+        @configuration.instance_eval(&configurator) if block_given?
       end
 
       def connection
@@ -16,7 +17,8 @@ module Tetrahedron
 
       def connect
         # If no path was specified, default to a transient in-memory database.
-        @connection = Sequel.sqlite(:database => (@configuration.path || ':memory:'))
+        puts "Connecting to SQlite3 database at #{@configuration.path}"
+        @connection = Sequel.sqlite(@configuration.path)
         true
       end
 
