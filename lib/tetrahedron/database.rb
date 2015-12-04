@@ -30,6 +30,7 @@ module Tetrahedron
     def self.connect
       configured!
       connected = self.class_variable_get(:@@provider).connect
+      self.connection.loggers << Logger.new($stdout) if connected
       # Back our models with the new connection.
       model = self.class_variable_get(:@@application).const_get("Model")
       model.db = self.connection if connected
