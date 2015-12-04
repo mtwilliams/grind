@@ -7,7 +7,7 @@ module Tetrahedron
       components = self.to_s.upcase.split('::')
       possibilities = (components.size.downto(1).map{|n| components.first(n).join('_')+'_ENV'})
       environments = (possibilities+['RACK_ENV']).map{|possibility| ENV[possibility]}
-      @env ||= ::ActiveSupport::StringInquirer.new(environments.reject(&:nil?).first)
+      @env ||= ::ActiveSupport::StringInquirer.new(environments.reject(&:nil?).first || 'development')
     end
 
     set :environment, Proc.new { self.env.to_sym }
