@@ -1,7 +1,7 @@
 module Tetrahedron
   class Application
     class Controller < Tetrahedron::Application::Base
-      set :views, Proc.new { "#{root}/app/broadsheet/views" }
+      set :views, Proc.new { "#{root}/app/#{application.name.underscore}/views" }
 
       # Recognize *.html.erb as Erubis templates.
       Tilt.register Tilt::ErubisTemplate, 'html.erb'
