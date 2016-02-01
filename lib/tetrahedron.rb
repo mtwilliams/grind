@@ -1,3 +1,7 @@
+require 'timeout'
+require 'uri'
+require 'socket'
+
 require 'active_support'
 require 'active_support/core_ext'
 
