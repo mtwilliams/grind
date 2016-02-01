@@ -55,7 +55,10 @@ module Tetrahedron
     end
 
     def self.wait_until_reachable!(opts={})
-      raise Unreachable unless self.wait_until_reachable(opts)
+      unless self.wait_until_reachable(opts)
+        $stderr.puts "Unable to reach #{opts[:host]}:#{opts[:port]}!"
+        raise Unreachable
+      end
     end
   end
 end

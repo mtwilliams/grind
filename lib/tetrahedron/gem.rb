@@ -41,7 +41,7 @@ module Tetrahedron
     end
 
     module VERSION #:nodoc:
-      MAJOR, MINOR, PATCH, PRE = [0, 0, 1, 3]
+      MAJOR, MINOR, PATCH, PRE = [0, 0, 1, 4]
       STRING = [MAJOR, MINOR, PATCH, PRE].compact.join('.')
     end
 
