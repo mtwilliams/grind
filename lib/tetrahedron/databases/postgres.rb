@@ -10,7 +10,7 @@ module Tetrahedron
                       :pool
       end
 
-      def initialize
+      def initialize(&configurator)
         @configuration = Configuration.new
         @configuration.instance_eval(&configurator) if block_given?
       end
