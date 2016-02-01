@@ -12,7 +12,7 @@ module Tetrahedron
 
       def initialize
         @configuration = Configuration.new
-        yield @configuration if block_given?
+        @configuration.instance_eval(&configurator) if block_given?
       end
 
       def connection
