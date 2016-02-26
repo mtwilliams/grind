@@ -1,10 +1,10 @@
 require 'ostruct'
 
-module Tetrahedron
+module Grind
   module Gem
     # The name of this Gem.
     def self.name
-      "tetrahedron"
+      "grind"
     end
 
     # The name and email address of the primary author.
@@ -22,7 +22,7 @@ module Tetrahedron
 
     # This Gem's homepage URL.
     def self.homepage
-      "http://github.com/mtwilliams/tetrahedron"
+      "http://github.com/mtwilliams/#{self.name}"
     end
 
     # This Gem's URL.
@@ -32,16 +32,16 @@ module Tetrahedron
 
     # A short summary of this Gem.
     def self.summary
-      "Welcome to the Tet."
+      "Microframework for simple but extensible Ruby services."
     end
 
     # A full description of this Gem.
     def self.description
-      "Tetrahedron is an opinionated web development framework."
+      self.summary
     end
 
     module VERSION #:nodoc:
-      MAJOR, MINOR, PATCH, PRE = [0, 0, 1, 6]
+      MAJOR, MINOR, PATCH, PRE = [0, 0, 0, 1]
       STRING = [MAJOR, MINOR, PATCH, PRE].compact.join('.')
     end
 
